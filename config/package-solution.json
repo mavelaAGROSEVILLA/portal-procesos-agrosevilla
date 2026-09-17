@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "portal-procesos-agrosevilla-client-side-solution",
+    "id": "4cceb1f1-34dc-4353-bf16-90749b06aac4",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.23.2"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "portal-procesos-agrosevilla description"
+      },
+      "longDescription": {
+        "default": "portal-procesos-agrosevilla description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "portal-procesos-agrosevilla Feature",
+        "description": "The feature that activates elements of the portal-procesos-agrosevilla solution.",
+        "id": "0626fee9-47ce-4bda-8401-12c2df74b7b7",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/portal-procesos-agrosevilla.sppkg"
+  }
+}
