@@ -73,23 +73,42 @@ export class ProcessService {
     description: string,
     ownerEmail: string,
     groupId: number,
-    departmentId: number
+    departmentId: number,
+    departmentValue: string
   ): Promise<void> {
-    const codeField = await this.sharePoint.resolveField(CREATE_LIST_TITLE, ['Codigo', 'Código', 'Title', 'Título']);
-    const nameField = await this.sharePoint.resolveField(CREATE_LIST_TITLE, ['NombreProceso']);
-    const descriptionField = await this.sharePoint.resolveField(CREATE_LIST_TITLE, ['DescripcionProceso', 'DescripciónProceso']);
-    const ownerField = await this.sharePoint.resolveField(CREATE_LIST_TITLE, ['PropietarioProceso', 'Propietario del proceso']);
-    const groupField = await this.sharePoint.resolveField(CREATE_LIST_TITLE, ['GrupoProcesoLookup', 'Grupo de procesos']);
-    const departmentField = await this.sharePoint.resolveField(CREATE_LIST_TITLE, ['DepartamentoLookup', 'Departamento']);
-    const owner = await this.sharePoint.sp.web.ensureUser(ownerEmail);
+    const codeField = await this.sharePoint.tryResolveField(CREATE_LIST_TITLE, ['Codigo', 'Código']);
+    const titleField = await this.sharePoint.resolveField(CREATE_LIST_TITLE, ['Title', 'Título', 'NombreProceso']);
+    const descriptionField = await this.sharePoint.tryResolveField(CREATE_LIST_TITLE, ['Contexto', 'Contexto - Descripción', 'DescripcionProceso', 'DescripciónProceso']);
+    const ownerField = await this.sharePoint.tryResolveField(CREATE_LIST_TITLE, ['PropietarioProceso', 'Propietario del proceso', 'Involucrados']);
+    const groupField = await this.sharePoint.tryResolveField(CREATE_LIST_TITLE, ['GrupoProcesoLookup', 'Grupo de procesos']);
+    const departmentField = await this.sharePoint.resolveFieldByTitleFragment(CREATE_LIST_TITLE, 'departamento');
+    const departmentChoice = departmentField.Choices?.find(choice =>
+      choice.toLowerCase().includes(departmentValue.toLowerCase()));
+    const departmentStoredValue = departmentChoice || departmentValue;
+    const publisherField = await this.sharePoint.tryResolveField(CREATE_LIST_TITLE, ['Involucrados', 'Publicado por', 'Publicador']);
+    const currentUser = publisherField ? await this.sharePoint.sp.web.currentUser() : undefined;
     const values: Record<string, unknown> = {
-      [codeField.InternalName]: code,
-      [nameField.InternalName]: name,
-      [descriptionField.InternalName]: description,
-      [ownerField.InternalName]: owner.Id,
-      [`${groupField.InternalName}Id`]: groupId,
-      [`${departmentField.InternalName}Id`]: departmentId
+      [titleField.InternalName]: name,
+      [departmentField.InternalName]: departmentField.AllowMultipleValues ? [departmentStoredValue] : departmentStoredValue
     };
+    if (codeField) {
+      values[codeField.InternalName] = code;
+    }
+    if (descriptionField && description) {
+      values[descriptionField.InternalName] = description;
+    }
+    if (groupField && groupId) {
+      values[`${groupField.InternalName}Id`] = groupId;
+    }
+    if (ownerField && ownerEmail) {
+      const owner = await this.sharePoint.sp.web.ensureUser(ownerEmail);
+      values[`${ownerField.InternalName}Id`] = owner.Id;
+    }
+    if (publisherField && currentUser) {
+      values[`${publisherField.InternalName}Id`] = publisherField.AllowMultipleValues
+        ? { results: [currentUser.Id] }
+        : currentUser.Id;
+    }
     await this.sharePoint.sp.web.lists.getByTitle(CREATE_LIST_TITLE).items.add(values);
   }
 }
