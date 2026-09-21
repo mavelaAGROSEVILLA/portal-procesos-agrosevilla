@@ -79,6 +79,17 @@ Cada documento utiliza `FileRef` y se abre en una pestaña nueva mediante:
 
 Cuando todavía no hay documentos, se muestra un estado vacío en lugar de datos simulados.
 
+La ficha incluye previsualizaciones específicas cuando existen estos documentos:
+
+- `TipoDocumental = Ficha Maestra` y archivo PDF: visor PDF embebido con enlace para abrirlo en una pestaña nueva.
+- `TipoDocumental = BPMN` y archivo PNG: visor de imagen con zoom mediante rueda o botones, desplazamiento arrastrando y opción para abrir la imagen en una pestaña nueva.
+- El zoom BPMN permite ampliar hasta el 1000%.
+
+- `TipoDocumental = Carpeta documental`: se consulta el contenido de la carpeta mediante PnPjs y se muestran sus archivos y subcarpetas debajo del visor BPMN.
+- El nombre de la carpeta y cada elemento de su contenido abren la ubicación de SharePoint en una pestaña nueva.
+
+Si el documento no existe o su extensión no coincide con el tipo esperado, se muestra un mensaje informativo y se conserva el enlace en la lista de documentos.
+
 ### Alta de información
 
 El encabezado dispone de la acción `Añadir`, con dos opciones:
@@ -175,6 +186,10 @@ Las respuestas de SharePoint se transforman en estos modelos antes de llegar a R
 
 - [DocumentService.ts](src/services/DocumentService.ts)
   - Lectura de documentos asociados a un proceso.
+
+- [DocumentPreview.tsx](src/pages/Process/DocumentPreview.tsx)
+  - Previsualización de PDF y diagrama BPMN.
+  - Zoom y desplazamiento del PNG BPMN.
 
 - [SearchService.ts](src/services/SearchService.ts)
   - Búsqueda global de departamentos, grupos y procesos.

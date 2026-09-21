@@ -29,6 +29,13 @@ export interface IDocumentoProceso {
   title?: string;
   processId?: number;
   url?: string;
+  documentType?: string;
+}
+
+export interface IDocumentoContenido {
+  name: string;
+  url: string;
+  isFolder: boolean;
 }
 
 export type SearchResultKind = 'department' | 'group' | 'process';
