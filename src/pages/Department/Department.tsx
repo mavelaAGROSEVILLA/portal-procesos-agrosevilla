@@ -8,10 +8,11 @@ interface IDepartmentProps {
   selectedId?: number;
   loading: boolean;
   error?: string;
+  groupCounts: Map<number, number>;
   onSelect: (id: number) => Promise<void>;
 }
 
-const Department: React.FunctionComponent<IDepartmentProps> = ({ departments, selectedId, loading, error, onSelect }) => (
+const Department: React.FunctionComponent<IDepartmentProps> = ({ departments, selectedId, loading, error, groupCounts, onSelect }) => (
   <section className={styles.level} aria-labelledby="departments-heading">
     <div className={styles.levelHeading}><span className={styles.levelNumber}>01</span><h3 id="departments-heading">Departamentos</h3></div>
     {loading && <Spinner size={SpinnerSize.small} label="Cargando departamentos" />}
@@ -26,7 +27,7 @@ const Department: React.FunctionComponent<IDepartmentProps> = ({ departments, se
         onClick={() => { onSelect(department.id).catch(() => undefined); }}
       >
         <Icon iconName={selectedId === department.id ? 'ChevronDown' : 'ChevronRight'} />
-        <span><strong>{department.code}</strong><span>{department.name}</span></span>
+        <span><strong>{department.code}</strong><span>{department.name}</span><small className={styles.itemCount}>{groupCounts.get(department.id) || 0} grupos</small></span>
       </button>)}
     </div>
   </section>

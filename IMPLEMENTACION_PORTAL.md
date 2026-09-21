@@ -30,6 +30,16 @@ https://agrosevilla.sharepoint.com/sites/Gestindocumentaldeprocesos
 - Acción `Cerrar rama`.
 - Estados de carga, error y ausencia de datos en cada nivel.
 - Ordenación consistente por código y nombre.
+- Contador de grupos de procesos en cada departamento.
+- Contador de procesos en cada grupo.
+
+Al abrir la ficha de un proceso, el árbol se compacta y conserva únicamente la ruta seleccionada:
+
+```text
+Departamento seleccionado -> Grupo seleccionado -> Proceso seleccionado
+```
+
+La ficha se muestra debajo de esta ruta.
 
 ### Búsqueda global
 
@@ -159,6 +169,7 @@ Las respuestas de SharePoint se transforman en estos modelos antes de llegar a R
 
 - [ProcessService.ts](src/services/ProcessService.ts)
   - Lectura de procesos por grupo.
+  - Conteo de procesos agrupados por grupo.
   - Lectura desde `Procesos`.
   - Creación desde `Cartera de procesos`.
 

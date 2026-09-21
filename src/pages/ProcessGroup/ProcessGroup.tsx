@@ -8,10 +8,11 @@ interface IProcessGroupProps {
   selectedId?: number;
   loading: boolean;
   error?: string;
+  processCounts: Map<number, number>;
   onSelect: (id: number) => Promise<void>;
 }
 
-const ProcessGroup: React.FunctionComponent<IProcessGroupProps> = ({ groups, selectedId, loading, error, onSelect }) => (
+const ProcessGroup: React.FunctionComponent<IProcessGroupProps> = ({ groups, selectedId, loading, error, processCounts, onSelect }) => (
   <section className={`${styles.level} ${styles.childLevel}`} aria-labelledby="groups-heading">
     <div className={styles.levelHeading}><span className={styles.levelNumber}>02</span><h3 id="groups-heading">Grupos de procesos</h3></div>
     {loading && <Spinner size={SpinnerSize.small} label="Cargando grupos de procesos" />}
@@ -26,7 +27,7 @@ const ProcessGroup: React.FunctionComponent<IProcessGroupProps> = ({ groups, sel
         onClick={() => { onSelect(group.id).catch(() => undefined); }}
       >
         <Icon iconName={selectedId === group.id ? 'ChevronDown' : 'ChevronRight'} />
-        <span><strong>{group.code}</strong><span>{group.name}</span></span>
+        <span><strong>{group.code}</strong><span>{group.name}</span><small className={styles.itemCount}>{processCounts.get(group.id) || 0} procesos</small></span>
       </button>)}
     </div>
   </section>

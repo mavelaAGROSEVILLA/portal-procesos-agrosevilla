@@ -26,6 +26,8 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
   const [isAddMenuOpen, setIsAddMenuOpen] = React.useState(false);
   const [groups, setGroups] = React.useState<IProcessGroup[]>([]);
   const [availableGroups, setAvailableGroups] = React.useState<IProcessGroup[]>([]);
+    const [groupCounts, setGroupCounts] = React.useState<Map<number, number>>(new Map());
+    const [processCounts, setProcessCounts] = React.useState<Map<number, number>>(new Map());
   const [processes, setProcesses] = React.useState<IProcess[]>([]);
   const [documents, setDocuments] = React.useState<IDocumentoProceso[]>([]);
   const [documentsLoading, setDocumentsLoading] = React.useState(false);
@@ -43,7 +45,14 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
     const loadDepartments = async (): Promise<void> => {
       try {
         setDepartmentError(undefined);
-        setDepartments(await new DepartmentService(sp).getDepartments());
+        const loadedDepartments = await new DepartmentService(sp).getDepartments();
+        setDepartments(loadedDepartments);
+        new ProcessGroupService(sp).getAllGroups().then(allGroups => {
+          const counts = new Map<number, number>();
+          allGroups.forEach(group => counts.set(group.departmentId, (counts.get(group.departmentId) || 0) + 1));
+          setGroupCounts(counts);
+        }, error => console.error('[ProcessView] Error al contar grupos por departamento', error));
+        new ProcessService(sp).getProcessCountsByGroup().then(setProcessCounts, error => console.error('[ProcessView] Error al contar procesos por grupo', error));
       } catch (error) {
         console.error('[ProcessView] Error al cargar departamentos', error);
         setDepartmentError('No se han podido cargar los departamentos.');
@@ -147,6 +156,8 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
     setIsAddMenuOpen(false);
   };
 
+  const compactTree = selectedProcess !== undefined;
+
   const handleCreated = async (): Promise<void> => {
     if (createMode === 'group' && selectedDepartmentId !== undefined) {
       groupsCache.current.delete(selectedDepartmentId);
@@ -220,21 +231,23 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
       </header>
       <div className={styles.tree}>
         <Department
-          departments={departments}
+          departments={compactTree ? departments.filter(department => department.id === selectedDepartmentId) : departments}
           selectedId={selectedDepartmentId}
           loading={loadingDepartments}
           error={departmentError}
+          groupCounts={groupCounts}
           onSelect={selectDepartment}
         />
         {selectedDepartmentId !== undefined && <ProcessGroup
-          groups={groups}
+          groups={compactTree ? groups.filter(group => group.id === selectedGroupId) : groups}
           selectedId={selectedGroupId}
           loading={loadingGroups}
           error={groupError}
+          processCounts={processCounts}
           onSelect={selectGroup}
         />}
         {selectedGroupId !== undefined && <Process
-          processes={processes}
+          processes={compactTree ? processes.filter(process => process.id === selectedProcess?.id) : processes}
           selectedId={selectedProcess?.id}
           loading={loadingProcesses}
           error={processError}

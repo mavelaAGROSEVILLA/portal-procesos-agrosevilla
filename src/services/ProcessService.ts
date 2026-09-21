@@ -53,6 +53,20 @@ export class ProcessService {
       .sort((left, right) => `${left.code} ${left.name}`.localeCompare(`${right.code} ${right.name}`));
   }
 
+  public async getProcessCountsByGroup(): Promise<Map<number, number>> {
+    const groupField = await this.sharePoint.resolveField(LIST_TITLE, ['GrupoProcesoLookup', 'Grupo de procesos']);
+    const items = await this.sharePoint.sp.web.lists.getByTitle(LIST_TITLE).items
+      .select(`${groupField.InternalName}Id`)();
+    const counts = new Map<number, number>();
+    (items as ISharePointItem[]).forEach(item => {
+      const groupId = SharePointService.getId(item, `${groupField.InternalName}Id`);
+      if (groupId > 0) {
+        counts.set(groupId, (counts.get(groupId) || 0) + 1);
+      }
+    });
+    return counts;
+  }
+
   public async createProcess(
     code: string,
     name: string,

@@ -45,6 +45,7 @@
 .item { align-items: center; background: #fff; border: 1px solid #dfe5e2; color: #26332f; cursor: pointer; display: flex; font: inherit; gap: 8px; min-height: 58px; padding: 10px 12px; text-align: left; width: 100%; }
 .item:hover, .item:focus { border-color: #0b6a5a; outline: 2px solid #0b6a5a; outline-offset: 1px; }
 .item > span { display: grid; gap: 3px; }
+.itemCount { color: #71807a; font-size: 10px; }
 .item strong, .processItem strong { color: #53605b; font-size: 11px; letter-spacing: .04em; }
 .selected { background: #e8f0ed; border-color: #0b6a5a; box-shadow: inset 3px 0 #0b6a5a; }
 .message { color: #53605b; font-size: 13px; line-height: 1.45; }
