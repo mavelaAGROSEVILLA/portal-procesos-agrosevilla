@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Spinner, SpinnerSize } from '@fluentui/react';
-import type { IDocumentoProceso, IProcess } from '../../models/ProcessModels';
+import type { IDocumentoContenido, IDocumentoProceso, IProcess } from '../../models/ProcessModels';
+import DocumentPreview from './DocumentPreview';
 import styles from '../../webparts/processView/components/Home.module.scss';
 
 interface IProcessDetailProps {
@@ -8,6 +9,7 @@ interface IProcessDetailProps {
   documents: IDocumentoProceso[];
   documentsLoading: boolean;
   documentsError?: string;
+  folderContents: Map<number, IDocumentoContenido[]>;
   onClose: () => void;
 }
 
@@ -16,6 +18,7 @@ const ProcessDetail: React.FunctionComponent<IProcessDetailProps> = ({
   documents,
   documentsLoading,
   documentsError,
+  folderContents,
   onClose
 }) => (
   <section className={styles.detail} aria-labelledby="process-detail-heading">
@@ -51,6 +54,28 @@ const ProcessDetail: React.FunctionComponent<IProcessDetailProps> = ({
         </ul>
       )}
     </div>
+    <div className={styles.previewGrid}>
+      <div className={styles.detailSection}>
+        <h4>Ficha Maestra</h4>
+        <DocumentPreview document={documents.find(document => document.documentType?.toLowerCase() === 'ficha maestra')} kind="master" />
+      </div>
+      <div className={styles.detailSection}>
+        <h4>Diagrama BPMN</h4>
+        <DocumentPreview document={documents.find(document => document.documentType?.toLowerCase() === 'bpmn')} kind="bpmn" />
+      </div>
+    </div>
+    {documents.filter(document => document.documentType?.toLowerCase() === 'carpeta documental').map(folder => (
+      <div className={styles.folderSection} key={folder.id}>
+        <h4>Contenido de la carpeta documental</h4>
+        {folder.url && <a className={styles.folderLink} href={folder.url} target="_blank" rel="noreferrer">{folder.name}</a>}
+        {(folderContents.get(folder.id) || []).length === 0 && <p className={styles.message}>La carpeta no contiene elementos visibles.</p>}
+        {(folderContents.get(folder.id) || []).length > 0 && <ul className={styles.documentList}>
+          {(folderContents.get(folder.id) || []).map(content => <li key={content.url}>
+            <a href={content.url} target="_blank" rel="noreferrer">{content.isFolder ? `Carpeta: ${content.name}` : content.name}</a>
+          </li>)}
+        </ul>}
+      </div>
+    ))}
   </section>
 );
 

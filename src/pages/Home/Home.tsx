@@ -4,7 +4,7 @@ import { DepartmentService } from '../../services/DepartmentService';
 import { ProcessGroupService } from '../../services/ProcessGroupService';
 import { ProcessService } from '../../services/ProcessService';
 import { DocumentService } from '../../services/DocumentService';
-import type { IDepartment, IDocumentoProceso, IProcess, IProcessGroup, ISearchResult } from '../../models/ProcessModels';
+import type { IDepartment, IDocumentoContenido, IDocumentoProceso, IProcess, IProcessGroup, ISearchResult } from '../../models/ProcessModels';
 import Department from '../Department/Department';
 import ProcessGroup from '../ProcessGroup/ProcessGroup';
 import Process from '../Process/Process';
@@ -32,6 +32,7 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
   const [documents, setDocuments] = React.useState<IDocumentoProceso[]>([]);
   const [documentsLoading, setDocumentsLoading] = React.useState(false);
   const [documentsError, setDocumentsError] = React.useState<string>();
+  const [folderContents, setFolderContents] = React.useState<Map<number, IDocumentoContenido[]>>(new Map());
   const [loadingDepartments, setLoadingDepartments] = React.useState(true);
   const [loadingGroups, setLoadingGroups] = React.useState(false);
   const [loadingProcesses, setLoadingProcesses] = React.useState(false);
@@ -135,9 +136,15 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
     setSelectedProcess(process);
     setDocuments([]);
     setDocumentsError(undefined);
+    setFolderContents(new Map());
     try {
       setDocumentsLoading(true);
-      setDocuments(await new DocumentService(sp).getDocumentsByProcess(process.id));
+      const documentService = new DocumentService(sp);
+      const loadedDocuments = await documentService.getDocumentsByProcess(process.id);
+      setDocuments(loadedDocuments);
+      const folderDocuments = loadedDocuments.filter(document => document.documentType?.toLowerCase() === 'carpeta documental' && document.url);
+      const contents = await Promise.all(folderDocuments.map(async folder => [folder.id, await documentService.getFolderContents(folder.url as string)] as [number, IDocumentoContenido[]]));
+      setFolderContents(new Map(contents));
     } catch (error) {
       console.error('[ProcessView] Error al cargar documentos del proceso', error);
       setDocumentsError('No se han podido cargar los documentos asociados.');
@@ -270,6 +277,7 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
         documents={documents}
         documentsLoading={documentsLoading}
         documentsError={documentsError}
+        folderContents={folderContents}
         onClose={() => setSelectedProcess(undefined)}
       />}
     </section>

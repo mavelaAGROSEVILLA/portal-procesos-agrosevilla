@@ -74,6 +74,21 @@
 .documentList li { padding: 4px 0; }
 .documentList a { color: #0b6a5a; }
 .documentList a:hover, .documentList a:focus { color: #084c42; }
+.previewGrid { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); }
+.pdfPreview { display: grid; gap: 8px; }
+.pdfFrame { background: #f7f8f7; border: 1px solid #dfe5e2; height: 460px; width: 100%; }
+.previewLink { color: #0b6a5a; font-size: 12px; font-weight: 600; }
+.imagePreview { border: 1px solid #dfe5e2; }
+.previewToolbar { align-items: center; background: #f7f8f7; border-bottom: 1px solid #dfe5e2; display: flex; flex-wrap: wrap; gap: 7px; padding: 8px; }
+.previewToolbar span { color: #53605b; font-size: 11px; font-weight: 600; margin-right: auto; }
+.previewToolbar button, .previewToolbar a { background: #fff; border: 1px solid #8c9792; color: #26332f; cursor: pointer; font: inherit; font-size: 11px; padding: 5px 8px; text-decoration: none; }
+.previewToolbar button:hover, .previewToolbar button:focus, .previewToolbar a:hover, .previewToolbar a:focus { border-color: #0b6a5a; outline: 2px solid #0b6a5a; outline-offset: 1px; }
+.imageViewport { align-items: center; background: #eef2f0; cursor: grab; display: flex; height: 460px; justify-content: center; overflow: hidden; touch-action: none; }
+.imageViewport.dragging { cursor: grabbing; }
+.previewImage { display: block; flex: 0 0 auto; height: auto; max-width: none; min-width: 100%; transform-origin: center center; user-select: none; width: 100%; }
+.folderSection { border-top: 1px solid #edebe9; margin-top: 20px; padding-top: 16px; }
+.folderSection h4 { font-size: 16px; margin: 0 0 8px; }
+.folderLink { color: #0b6a5a; font-weight: 650; }
 .createPanel { background: #fff; border-top: 3px solid #0b6a5a; margin-top: 24px; padding: 24px 28px 28px; }
 .formGrid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 20px; }
 .formWide { grid-column: 1 / -1; }
@@ -87,6 +102,7 @@
   .header h2 { font-size: 25px; }
   .tree { display: block; }
   .detailGrid { grid-template-columns: 1fr; }
+  .previewGrid { grid-template-columns: 1fr; }
   .level { margin-top: 22px; }
   .childLevel, .processLevel { border-top: 3px solid #d9dfdc; padding-top: 18px; }
   .header, .detail { padding-left: 18px; padding-right: 18px; }
