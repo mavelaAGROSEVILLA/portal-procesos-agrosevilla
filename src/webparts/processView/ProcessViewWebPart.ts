@@ -11,6 +11,8 @@ import { IReadonlyTheme } from '@microsoft/sp-component-base';
 import * as strings from 'ProcessViewWebPartStrings';
 import ProcessView from './components/ProcessView';
 import { IProcessViewProps } from './components/IProcessViewProps';
+import { spfi, type SPFI } from '@pnp/sp';
+import { SPFx } from '@pnp/sp/behaviors/spfx';
 
 export interface IProcessViewWebPartProps {
   description: string;
@@ -20,25 +22,22 @@ export default class ProcessViewWebPart extends BaseClientSideWebPart<IProcessVi
 
   private _isDarkTheme: boolean = false;
   private _environmentMessage: string = '';
+  private _sp!: SPFI;
 
   public render(): void {
     const element: React.ReactElement<IProcessViewProps> = React.createElement(
       ProcessView,
       {
-        description: this.properties.description,
-        isDarkTheme: this._isDarkTheme,
-        environmentMessage: this._environmentMessage,
-        userDisplayName: this.context.pageContext.user.displayName
+        sp: this._sp
       }
     );
 
     ReactDom.render(element, this.domElement);
   }
 
-  protected onInit(): Promise<void> {
-    return this._getEnvironmentMessage().then(message => {
-      this._environmentMessage = message;
-    });
+  protected async onInit(): Promise<void> {
+    this._sp = spfi().using(SPFx(this.context));
+    this._environmentMessage = await this._getEnvironmentMessage();
   }
 
 

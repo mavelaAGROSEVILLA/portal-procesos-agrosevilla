@@ -1,6 +1,5 @@
+import type { SPFI } from '@pnp/sp';
+
 export interface IProcessViewProps {
-  description: string;
-  isDarkTheme: boolean;
-  environmentMessage: string;
-  userDisplayName: string;
+  sp: SPFI;
 }
