@@ -14,6 +14,8 @@
 .headerActions { align-items: flex-end; display: flex; flex-direction: column; gap: 8px; position: relative; }
 .addButton { background: #0b6a5a; border: 1px solid #0b6a5a; color: #fff; cursor: pointer; font: inherit; font-weight: 600; padding: 9px 16px; }
 .addButton:hover, .addButton:focus { background: #084c42; outline: 2px solid #0b6a5a; outline-offset: 2px; }
+.showAllButton { background: #2f8f46; border: 1px solid #2f8f46; color: #fff; cursor: pointer; font: inherit; font-weight: 600; padding: 9px 16px; }
+.showAllButton:hover, .showAllButton:focus, .showAllButtonActive { background: #236d35; outline: 2px solid #2f8f46; outline-offset: 2px; }
 .addMenu { background: #fff; border: 1px solid #cbd5d1; box-shadow: 0 5px 14px rgba(24, 45, 39, .14); display: grid; min-width: 190px; position: absolute; right: 0; top: 43px; z-index: 2; }
 .addMenu button { background: #fff; border: 0; color: #26332f; cursor: pointer; font: inherit; padding: 11px 13px; text-align: left; }
 .addMenu button:hover, .addMenu button:focus { background: #edf3f0; outline: 2px solid #0b6a5a; outline-offset: -2px; }
@@ -59,6 +61,12 @@
 .processAction { color: #0b6a5a; flex: 0 0 auto; font-size: 10px; font-weight: 700; }
 .processItem h4 { font-size: 15px; font-weight: 600; margin: 3px 0 0; }
 .processItem p { color: #53605b; font-size: 13px; line-height: 1.4; margin: 10px 0 0; }
+.allProcesses { border-top-color: #2f8f46; grid-column: 1 / -1; }
+.allProcessItems { display: grid; gap: 10px; }
+.allProcessItem { background: #fff; border: 1px solid #dfe5e2; padding: 13px 14px; }
+.allProcessData { border-top: 1px solid #edf0ee; display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 12px; padding-top: 10px; }
+.allProcessData span { color: #26332f; display: grid; font-size: 13px; gap: 3px; }
+.allProcessData strong { color: #53605b; font-size: 10px; text-transform: uppercase; }
 .meta { color: #0b6a5a; font-size: 11px; font-weight: 700; margin-top: 10px; text-transform: uppercase; }
 .detail { background: #fff; border-top: 3px solid #0b6a5a; margin-top: 28px; padding: 24px 28px 28px; }
 .detailHeader { align-items: flex-start; display: flex; justify-content: space-between; }
@@ -101,6 +109,8 @@
   .header { flex-wrap: wrap; }
   .header h2 { font-size: 25px; }
   .tree { display: block; }
+  .allProcesses { margin-top: 22px; }
+  .allProcessData { grid-template-columns: 1fr; }
   .detailGrid { grid-template-columns: 1fr; }
   .previewGrid { grid-template-columns: 1fr; }
   .level { margin-top: 22px; }

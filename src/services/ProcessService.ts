@@ -14,6 +14,14 @@ export class ProcessService {
   }
 
   public async getProcessesByGroup(groupId: number): Promise<IProcess[]> {
+    return this.getProcesses(groupId);
+  }
+
+  public async getAllProcesses(): Promise<IProcess[]> {
+    return this.getProcesses();
+  }
+
+  private async getProcesses(groupId?: number): Promise<IProcess[]> {
     const codeField = await this.sharePoint.resolveField(LIST_TITLE, ['Codigo', 'Código', 'Title', 'Título']);
     const nameField = await this.sharePoint.resolveField(LIST_TITLE, ['NombreProceso']);
     const descriptionField = await this.sharePoint.resolveField(LIST_TITLE, ['DescripcionProceso', 'DescripciónProceso']);
@@ -22,7 +30,7 @@ export class ProcessService {
     const ownerField = await this.sharePoint.resolveField(LIST_TITLE, ['PropietarioProceso', 'Propietario del proceso']);
     const statusField = await this.sharePoint.resolveField(LIST_TITLE, ['Status', 'Estado']);
     const typeField = await this.sharePoint.resolveField(LIST_TITLE, ['TipoProceso', 'Tipo de proceso']);
-    const items = await this.sharePoint.sp.web.lists.getByTitle(LIST_TITLE).items
+    let itemsQuery = this.sharePoint.sp.web.lists.getByTitle(LIST_TITLE).items
       .select(
         'ID',
         codeField.InternalName,
@@ -34,8 +42,11 @@ export class ProcessService {
         statusField.InternalName,
         typeField.InternalName
       )
-      .expand(ownerField.InternalName)
-      .filter(`${groupField.InternalName}Id eq ${groupId}`)();
+      .expand(ownerField.InternalName);
+    if (groupId !== undefined) {
+      itemsQuery = itemsQuery.filter(`${groupField.InternalName}Id eq ${groupId}`);
+    }
+    const items = await itemsQuery();
 
     return (items as ISharePointItem[])
       .map(item => ({
