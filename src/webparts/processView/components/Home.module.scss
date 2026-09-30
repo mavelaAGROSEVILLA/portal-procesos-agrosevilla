@@ -37,8 +37,9 @@
 .searchResultCopy span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .searchResultKind { color: #53605b; font-size: 10px; font-weight: 700; text-transform: uppercase; }
 .searchMessage { color: #53605b; font-size: 13px; margin: 0; padding: 13px; }
-.tree { display: grid; gap: 18px; grid-template-columns: repeat(3, minmax(0, 1fr)); padding-top: 24px; }
-.level { background: #fff; border-top: 3px solid #d9dfdc; min-width: 0; padding: 18px 16px 20px; }
+.tree { display: grid; gap: 18px; grid-template-columns: repeat(3, minmax(0, 1fr)); min-width: 0; padding-top: 24px; width: 100%; }
+.tree > *, .level { box-sizing: border-box; max-width: 100%; min-width: 0; }
+.level { background: #fff; border-top: 3px solid #d9dfdc; padding: 18px 16px 20px; }
 .childLevel, .processLevel { border-left: 0; }
 .levelHeading { align-items: center; border-bottom: 1px solid #edf0ee; display: flex; gap: 9px; margin-bottom: 14px; padding-bottom: 12px; }
 .levelHeading h3 { color: #26332f; font-size: 16px; font-weight: 650; margin: 0; }
@@ -51,16 +52,16 @@
 .item strong, .processItem strong { color: #53605b; font-size: 11px; letter-spacing: .04em; }
 .selected { background: #e8f0ed; border-color: #0b6a5a; box-shadow: inset 3px 0 #0b6a5a; }
 .message { color: #53605b; font-size: 13px; line-height: 1.45; }
-.processItems { display: grid; gap: 10px; }
-.processItem { background: #fff; border: 1px solid #dfe5e2; padding: 13px 14px; }
+.processItems { display: grid; gap: 10px; min-width: 0; }
+.processItem { background: #fff; border: 1px solid #dfe5e2; box-sizing: border-box; min-width: 0; max-width: 100%; overflow-wrap: anywhere; padding: 13px 14px; }
 .selectedProcess { border-color: #107c66; box-shadow: inset 3px 0 #107c66; }
-.processSelect { align-items: center; background: transparent; border: 0; color: inherit; cursor: pointer; display: flex; gap: 12px; justify-content: space-between; padding: 0; text-align: left; width: 100%; }
+.processSelect { align-items: center; background: transparent; border: 0; color: inherit; cursor: pointer; display: flex; gap: 12px; justify-content: space-between; min-width: 0; padding: 0; text-align: left; width: 100%; }
 .processSelect:hover, .processSelect:focus { outline: 2px solid #0b6a5a; outline-offset: 3px; }
-.processCopy { display: grid; gap: 3px; min-width: 0; }
+.processCopy { display: grid; gap: 3px; min-width: 0; overflow-wrap: anywhere; }
 .processCopy h4 { overflow-wrap: anywhere; }
 .processAction { color: #0b6a5a; flex: 0 0 auto; font-size: 10px; font-weight: 700; }
 .processItem h4 { font-size: 15px; font-weight: 600; margin: 3px 0 0; }
-.processItem p { color: #53605b; font-size: 13px; line-height: 1.4; margin: 10px 0 0; }
+.processItem p { color: #53605b; font-size: 13px; line-height: 1.4; margin: 10px 0 0; max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
 .allProcesses { border-top-color: #2f8f46; grid-column: 1 / -1; }
 .allProcessItems { display: grid; gap: 10px; }
 .allProcessItem { background: #fff; border: 1px solid #dfe5e2; padding: 13px 14px; }
@@ -68,16 +69,16 @@
 .allProcessData span { color: #26332f; display: grid; font-size: 13px; gap: 3px; }
 .allProcessData strong { color: #53605b; font-size: 10px; text-transform: uppercase; }
 .meta { color: #0b6a5a; font-size: 11px; font-weight: 700; margin-top: 10px; text-transform: uppercase; }
-.detail { background: #fff; border-top: 3px solid #0b6a5a; margin-top: 28px; padding: 24px 28px 28px; }
+.detail { background: #fff; border-top: 3px solid #0b6a5a; box-sizing: border-box; margin-top: 28px; max-width: 100%; min-width: 0; overflow-wrap: anywhere; padding: 24px 28px 28px; width: 100%; }
 .detailHeader { align-items: flex-start; display: flex; justify-content: space-between; }
 .detailHeader h3 { font-size: 24px; font-weight: 600; margin: 0; }
 .detailGrid { display: grid; gap: 10px; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 20px; }
-.detailGrid div { background: #f7f8f7; border: 1px solid #dfe5e2; display: grid; gap: 5px; padding: 12px; }
+.detailGrid div { background: #f7f8f7; border: 1px solid #dfe5e2; display: grid; gap: 5px; min-width: 0; overflow-wrap: anywhere; padding: 12px; }
 .detailGrid span { color: #53605b; font-size: 12px; }
 .detailGrid strong { font-size: 14px; font-weight: 600; }
 .detailSection { border-top: 1px solid #edebe9; margin-top: 20px; padding-top: 16px; }
 .detailSection h4 { font-size: 16px; margin: 0 0 8px; }
-.detailSection p { color: #53605b; line-height: 1.5; margin: 0; }
+.detailSection p { color: #53605b; line-height: 1.5; margin: 0; overflow-wrap: anywhere; word-break: break-word; }
 .documentList { margin: 0; padding-left: 20px; }
 .documentList li { padding: 4px 0; }
 .documentList a { color: #0b6a5a; }

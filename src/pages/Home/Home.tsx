@@ -32,6 +32,7 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
   const [processes, setProcesses] = React.useState<IProcess[]>([]);
   const [allProcesses, setAllProcesses] = React.useState<IProcess[]>([]);
   const [allGroups, setAllGroups] = React.useState<IProcessGroup[]>([]);
+  const [selectedAllProcessId, setSelectedAllProcessId] = React.useState<number>();
   const [showAllProcesses, setShowAllProcesses] = React.useState(false);
   const [documents, setDocuments] = React.useState<IDocumentoProceso[]>([]);
   const [documentsLoading, setDocumentsLoading] = React.useState(false);
@@ -162,6 +163,8 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
 
   const showAllProcessesView = async (): Promise<void> => {
     setShowAllProcesses(true);
+    setSelectedProcess(undefined);
+    setSelectedAllProcessId(undefined);
     setAllProcessesError(undefined);
     if (allProcesses.length > 0) {
       return;
@@ -185,6 +188,8 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
   const toggleAllProcessesView = async (): Promise<void> => {
     if (showAllProcesses) {
       setShowAllProcesses(false);
+      setSelectedAllProcessId(undefined);
+      setSelectedProcess(undefined);
       return;
     }
     await showAllProcessesView();
@@ -277,12 +282,16 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
         </div>
       </header>
       {showAllProcesses ? <AllProcesses
-        processes={allProcesses}
+        processes={selectedAllProcessId === undefined ? allProcesses : allProcesses.filter(process => process.id === selectedAllProcessId)}
+        selectedProcessId={selectedAllProcessId}
         departments={departments}
         groups={allGroups}
         loading={allProcessesLoading}
         error={allProcessesError}
-        onSelect={process => { selectProcess(process).catch(() => undefined); }}
+        onSelect={process => {
+          setSelectedAllProcessId(process.id);
+          selectProcess(process).catch(() => undefined);
+        }}
       /> : <div className={styles.tree}>
         <Department
           departments={compactTree ? departments.filter(department => department.id === selectedDepartmentId) : departments}
@@ -325,7 +334,10 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
         documentsLoading={documentsLoading}
         documentsError={documentsError}
         folderContents={folderContents}
-        onClose={() => setSelectedProcess(undefined)}
+        onClose={() => {
+          setSelectedProcess(undefined);
+          setSelectedAllProcessId(undefined);
+        }}
       />}
     </section>
   );
