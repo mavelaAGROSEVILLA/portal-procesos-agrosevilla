@@ -87,7 +87,7 @@
 .processCopy h4 { overflow-wrap: anywhere; }
 .processAction { color: #0b6a5a; flex: 0 0 auto; font-size: 10px; font-weight: 700; }
 .processItem h4 { font-size: 15px; font-weight: 600; margin: 3px 0 0; }
-.processItem p { color: #53605b; font-size: 13px; line-height: 1.4; margin: 10px 0 0; max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
+.processItem p { color: #53605b; font-size: 13px; line-height: 1.4; margin: 10px 0 0; max-width: 100%; overflow-wrap: anywhere; white-space: pre-line; word-break: break-word; }
 .allProcesses { border-top-color: #2f8f46; grid-column: 1 / -1; }
 .allProcessItems { display: grid; gap: 10px; }
 .allProcessItem { background: #fff; border: 1px solid #dfe5e2; padding: 13px 14px; }
@@ -108,7 +108,7 @@
 .detailGrid strong { font-size: 14px; font-weight: 600; }
 .detailSection { border-top: 1px solid #edebe9; margin-top: 20px; padding-top: 16px; }
 .detailSection h4 { font-size: 16px; margin: 0 0 8px; }
-.detailSection p { color: #53605b; line-height: 1.5; margin: 0; overflow-wrap: anywhere; word-break: break-word; }
+.detailSection p { color: #53605b; line-height: 1.5; margin: 0; overflow-wrap: anywhere; white-space: pre-line; word-break: break-word; }
 .documentList { margin: 0; padding-left: 20px; }
 .documentList li { padding: 4px 0; }
 .documentList a { color: #0b6a5a; }

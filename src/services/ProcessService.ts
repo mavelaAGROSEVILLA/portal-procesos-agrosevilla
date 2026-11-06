@@ -1,6 +1,7 @@
 import type { SPFI } from '@pnp/sp';
 import type { IProcess } from '../models/ProcessModels';
 import { SharePointService, type ISharePointItem } from './SharePointService';
+import { normalizeRichText } from '../utils/richText';
 import '@pnp/sp/site-users/web';
 
 const LIST_TITLE = 'Procesos';
@@ -53,7 +54,7 @@ export class ProcessService {
         id: item.ID || 0,
         code: SharePointService.getText(item, codeField.InternalName),
         name: SharePointService.getText(item, nameField.InternalName),
-        description: SharePointService.getText(item, descriptionField.InternalName),
+        description: normalizeRichText(SharePointService.getText(item, descriptionField.InternalName)),
         groupId: SharePointService.getId(item, `${groupField.InternalName}Id`),
         departmentId: SharePointService.getId(item, `${departmentField.InternalName}Id`) || undefined,
         owner: SharePointService.getLookupText(item, ownerField.InternalName) || undefined,

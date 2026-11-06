@@ -1,6 +1,7 @@
 import type { SPFI } from '@pnp/sp';
 import type { ISearchResult } from '../models/ProcessModels';
 import { SharePointService, type ISharePointItem } from './SharePointService';
+import { normalizeRichText } from '../utils/richText';
 
 const SEARCH_LIMIT = 8;
 
@@ -75,7 +76,7 @@ export class SearchService {
       kind: 'process' as const,
       code: SharePointService.getText(item, codeField.InternalName),
       name: SharePointService.getText(item, nameField.InternalName),
-      description: SharePointService.getText(item, descriptionField.InternalName),
+      description: normalizeRichText(SharePointService.getText(item, descriptionField.InternalName)),
       groupId: SharePointService.getId(item, `${groupField.InternalName}Id`),
       departmentId: SharePointService.getId(item, `${departmentField.InternalName}Id`)
     }));
