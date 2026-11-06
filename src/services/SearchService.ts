@@ -68,7 +68,7 @@ export class SearchService {
     const departmentField = await this.sharePoint.resolveField(listTitle, ['DepartamentoLookup', 'Departamento']);
     const items = await this.sharePoint.sp.web.lists.getByTitle(listTitle).items
       .select('ID', codeField.InternalName, nameField.InternalName, descriptionField.InternalName, `${groupField.InternalName}Id`, `${departmentField.InternalName}Id`)
-      .filter(this.buildFilter([codeField.InternalName, nameField.InternalName], term))
+      .filter(this.buildFilter([codeField.InternalName, nameField.InternalName, descriptionField.InternalName], term))
       .top(SEARCH_LIMIT)();
     return (items as ISharePointItem[]).map(item => ({
       id: item.ID || 0,

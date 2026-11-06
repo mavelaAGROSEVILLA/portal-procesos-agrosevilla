@@ -10,6 +10,9 @@ interface IProcessDetailProps {
   documentsLoading: boolean;
   documentsError?: string;
   folderContents: Map<number, IDocumentoContenido[]>;
+  departmentName?: string;
+  groupName?: string;
+  returnLabel?: string;
   onClose: () => void;
 }
 
@@ -19,6 +22,9 @@ const ProcessDetail: React.FunctionComponent<IProcessDetailProps> = ({
   documentsLoading,
   documentsError,
   folderContents,
+  departmentName,
+  groupName,
+  returnLabel = 'Cerrar detalle',
   onClose
 }) => (
   <section className={styles.detail} aria-labelledby="process-detail-heading">
@@ -27,10 +33,12 @@ const ProcessDetail: React.FunctionComponent<IProcessDetailProps> = ({
         <p className={styles.eyebrow}>Ficha del proceso</p>
         <h3 id="process-detail-heading">{process.name}</h3>
       </div>
-      <button className={styles.closeButton} type="button" onClick={onClose}>Cerrar detalle</button>
+      <button className={styles.closeButton} type="button" onClick={onClose}>{returnLabel}</button>
     </div>
     <div className={styles.detailGrid}>
       <div><span>Código</span><strong>{process.code || 'Sin código'}</strong></div>
+      <div><span>Departamento</span><strong>{departmentName || 'No informado'}</strong></div>
+      <div><span>Grupo de proceso</span><strong>{groupName || 'Sin grupo'}</strong></div>
       <div><span>Responsable</span><strong>{process.owner || 'No informado'}</strong></div>
       <div><span>Estado</span><strong>{process.status || 'No informado'}</strong></div>
       <div><span>Tipo</span><strong>{process.type || 'No informado'}</strong></div>

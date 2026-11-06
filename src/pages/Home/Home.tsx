@@ -1,5 +1,6 @@
 import * as React from 'react';
 import type { SPFI } from '@pnp/sp';
+import { MessageBar, MessageBarType } from '@fluentui/react';
 import { DepartmentService } from '../../services/DepartmentService';
 import { ProcessGroupService } from '../../services/ProcessGroupService';
 import { ProcessService } from '../../services/ProcessService';
@@ -24,6 +25,7 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
   const [selectedGroupId, setSelectedGroupId] = React.useState<number>();
   const [selectedProcess, setSelectedProcess] = React.useState<IProcess>();
   const [createMode, setCreateMode] = React.useState<CreateItemMode>();
+  const [saveNotice, setSaveNotice] = React.useState('');
   const [isAddMenuOpen, setIsAddMenuOpen] = React.useState(false);
   const [groups, setGroups] = React.useState<IProcessGroup[]>([]);
   const [availableGroups, setAvailableGroups] = React.useState<IProcessGroup[]>([]);
@@ -199,6 +201,7 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
     setSelectedDepartmentId(undefined);
     setSelectedGroupId(undefined);
     setSelectedProcess(undefined);
+    setSelectedAllProcessId(undefined);
     setGroups([]);
     setProcesses([]);
     setShowAllProcesses(false);
@@ -210,6 +213,7 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
   const compactTree = selectedProcess !== undefined;
 
   const handleCreated = async (): Promise<void> => {
+    const createdMode = createMode;
     if (createMode === 'group' && selectedDepartmentId !== undefined) {
       groupsCache.current.delete(selectedDepartmentId);
       await loadGroups(selectedDepartmentId, true);
@@ -217,6 +221,9 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
     if (createMode === 'process' && selectedGroupId !== undefined) {
       processesCache.current.delete(selectedGroupId);
       await loadProcesses(selectedGroupId, true);
+    }
+    if (createdMode) {
+      setSaveNotice(createdMode === 'group' ? 'Grupo de procesos creado correctamente.' : 'Proceso creado correctamente.');
     }
     setCreateMode(undefined);
     setIsAddMenuOpen(false);
@@ -230,6 +237,9 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
   };
 
   const focusSearchResult = async (result: ISearchResult): Promise<void> => {
+    setSaveNotice('');
+    setShowAllProcesses(false);
+    setSelectedAllProcessId(undefined);
     if (result.kind === 'department') {
       setSelectedDepartmentId(result.id);
       setSelectedGroupId(undefined);
@@ -262,15 +272,41 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
     }
   };
 
+  const selectedDepartment = departments.find(department => department.id === selectedDepartmentId);
+  const selectedGroup = groups.find(group => group.id === selectedGroupId) || allGroups.find(group => group.id === selectedGroupId);
+  const selectedProcessDepartmentName = departments.find(department => department.id === selectedProcess?.departmentId)?.name;
+  const selectedProcessGroupName = allGroups.find(group => group.id === selectedProcess?.groupId)?.name || selectedGroup?.name;
+
   return (
     <section className={styles.home} aria-label="Catálogo de procesos">
-      <header className={styles.header}>
-        <div>
+      <section className={styles.hero} aria-label="Introducción al catálogo de procesos">
+        <div className={styles.heroCopy}>
           <p className={styles.eyebrow}>Catálogo corporativo</p>
-          <h2>Procesos</h2>
-          <p className={styles.intro}>Explora los procesos organizados por departamento y grupo.</p>
+          <h2>Todo conectado.<br /><span>Cada proceso importa.</span></h2>
+          <p className={styles.intro}>Explora cómo trabajan juntos los equipos, los grupos y los procesos de AGROSEVILLA.</p>
         </div>
-        <GlobalSearch sp={sp} onSelect={result => { focusSearchResult(result).catch(() => undefined); }} />
+        <div className={styles.heroScene} aria-hidden="true">
+          <div className={styles.heroGlow} />
+          <div className={`${styles.heroCard} ${styles.heroCardDepartment}`}>
+            <span>01 / ESTRUCTURA</span>
+            <strong>Departamento</strong>
+            <i />
+          </div>
+          <div className={`${styles.heroCard} ${styles.heroCardGroup}`}>
+            <span>02 / EQUIPO</span>
+            <strong>Grupo de procesos</strong>
+            <i />
+          </div>
+          <div className={`${styles.heroCard} ${styles.heroCardProcess}`}>
+            <span>03 / TRABAJO</span>
+            <strong>Proceso</strong>
+            <i />
+          </div>
+          <div className={styles.heroOrb} />
+        </div>
+      </section>
+      <div className={styles.toolbar}>
+        <GlobalSearch sp={sp} departments={departments} groups={allGroups} onSelect={result => { focusSearchResult(result).catch(() => undefined); }} />
         <div className={styles.headerActions}>
           <button className={styles.addButton} type="button" onClick={() => setIsAddMenuOpen(!isAddMenuOpen)} aria-expanded={isAddMenuOpen}>Añadir</button>
           <button className={`${styles.showAllButton} ${showAllProcesses ? styles.showAllButtonActive : ''}`} type="button" onClick={() => { toggleAllProcessesView().catch(() => undefined); }} aria-pressed={showAllProcesses}>{showAllProcesses ? 'Volver a la vista anterior' : 'Mostrar todos los procesos'}</button>
@@ -280,9 +316,51 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
           </div>}
           {selectedDepartmentId !== undefined && <button className={styles.closeButton} type="button" onClick={closeBranch}>Cerrar rama</button>}
         </div>
-      </header>
+      </div>
+      {saveNotice && <MessageBar messageBarType={MessageBarType.success} onDismiss={() => setSaveNotice('')}>{saveNotice}</MessageBar>}
+      {(selectedDepartment || showAllProcesses) && <nav className={styles.breadcrumbs} aria-label="Ruta de navegación">
+        <ol>
+          {showAllProcesses
+            ? <>
+              <li><button type="button" onClick={() => { setSelectedAllProcessId(undefined); setSelectedProcess(undefined); }}>Todos los procesos</button></li>
+              {selectedProcess && <li aria-current="page"><span>{selectedProcess.code} - {selectedProcess.name}</span></li>}
+            </>
+            : <>
+              <li><button type="button" onClick={() => {
+                setSelectedDepartmentId(undefined);
+                setSelectedGroupId(undefined);
+                setSelectedProcess(undefined);
+                setGroups([]);
+                setProcesses([]);
+              }}>Departamentos</button></li>
+              {selectedDepartment && <li>
+                {selectedGroupId === undefined
+                  ? <span aria-current="page">{selectedDepartment.code} - {selectedDepartment.name}</span>
+                  : <button type="button" onClick={() => {
+                    setSelectedGroupId(undefined);
+                    setSelectedProcess(undefined);
+                    setProcesses([]);
+                  }}>{selectedDepartment.code} - {selectedDepartment.name}</button>}
+              </li>}
+              {selectedGroup && <li>
+                {selectedProcess
+                  ? <button type="button" onClick={() => setSelectedProcess(undefined)}>{selectedGroup.code} - {selectedGroup.name}</button>
+                  : <span aria-current="page">{selectedGroup.code} - {selectedGroup.name}</span>}
+              </li>}
+              {selectedProcess && <li aria-current="page"><span>{selectedProcess.code} - {selectedProcess.name}</span></li>}
+            </>}
+        </ol>
+        <button className={styles.clearSelection} type="button" onClick={() => {
+          if (showAllProcesses) {
+            setSelectedAllProcessId(undefined);
+            setSelectedProcess(undefined);
+          } else {
+            closeBranch();
+          }
+        }}>Limpiar selección</button>
+      </nav>}
       {showAllProcesses ? <AllProcesses
-        processes={selectedAllProcessId === undefined ? allProcesses : allProcesses.filter(process => process.id === selectedAllProcessId)}
+        processes={allProcesses}
         selectedProcessId={selectedAllProcessId}
         departments={departments}
         groups={allGroups}
@@ -334,6 +412,9 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
         documentsLoading={documentsLoading}
         documentsError={documentsError}
         folderContents={folderContents}
+        departmentName={selectedProcessDepartmentName || selectedDepartment?.name}
+        groupName={selectedProcessGroupName}
+        returnLabel={showAllProcesses ? 'Volver a resultados' : 'Cerrar detalle'}
         onClose={() => {
           setSelectedProcess(undefined);
           setSelectedAllProcessId(undefined);

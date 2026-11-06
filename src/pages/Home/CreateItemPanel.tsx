@@ -46,40 +46,51 @@ const CreateItemPanel: React.FunctionComponent<ICreateItemPanelProps> = ({
   const [groupId, setGroupId] = React.useState<number | undefined>(selectedGroupId);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string>();
+  const [errorDetails, setErrorDetails] = React.useState<string>();
+  const [codeError, setCodeError] = React.useState('');
+  const [nameError, setNameError] = React.useState('');
+  const [departmentError, setDepartmentError] = React.useState('');
 
   const departmentOptions: IDropdownOption[] = departments.map(department => ({ key: department.id, text: `${department.code} - ${department.name}` }));
   const departmentGroups = groups.filter(group => group.departmentId === departmentId);
   const groupOptions: IDropdownOption[] = departmentGroups.map(group => ({ key: group.id, text: `${group.code} - ${group.name}` }));
 
   const submit = async (): Promise<void> => {
-    if (!code.trim() || !name.trim() || !departmentId) {
-      setError(mode === 'group'
-        ? 'Completa el código, el nombre y el departamento.'
-        : 'Completa el código, el nombre y el departamento.');
+    const selectedDepartmentId = departmentId;
+    const nextCodeError = code.trim() ? '' : 'Introduce el código.';
+    const nextNameError = name.trim() ? '' : 'Introduce el nombre.';
+    const nextDepartmentError = selectedDepartmentId === undefined ? 'Selecciona un departamento.' : '';
+    setCodeError(nextCodeError);
+    setNameError(nextNameError);
+    setDepartmentError(nextDepartmentError);
+    if (nextCodeError || nextNameError || nextDepartmentError || selectedDepartmentId === undefined) {
+      setError('Revisa los campos indicados antes de guardar.');
+      setErrorDetails(undefined);
       return;
     }
     try {
       setSaving(true);
       setError(undefined);
+      setErrorDetails(undefined);
       if (mode === 'group') {
-        await new ProcessGroupService(sp).createGroup(code.trim(), name.trim(), departmentId);
+        await new ProcessGroupService(sp).createGroup(code.trim(), name.trim(), selectedDepartmentId);
       } else {
-        const selectedDepartment = departments.find(department => department.id === departmentId);
+        const selectedDepartment = departments.find(department => department.id === selectedDepartmentId);
         await new ProcessService(sp).createProcess(
           code.trim(),
           name.trim(),
           description.trim(),
           '',
-          groupId as number,
-          departmentId,
+          groupId || 0,
+          selectedDepartmentId,
           selectedDepartment ? selectedDepartment.code : ''
         );
       }
       await onCreated();
     } catch (saveError) {
       console.error('[ProcessView] Error al crear elemento', saveError);
-      const errorMessage = saveError instanceof Error ? saveError.message : 'Error desconocido';
-      setError(`No se ha podido guardar: ${errorMessage}`);
+      setError('No se ha podido guardar en SharePoint. Comprueba los campos, tu acceso y vuelve a intentarlo.');
+      setErrorDetails(saveError instanceof Error ? saveError.message : String(saveError));
     } finally {
       setSaving(false);
     }
@@ -95,15 +106,22 @@ const CreateItemPanel: React.FunctionComponent<ICreateItemPanelProps> = ({
         <DefaultButton text="Cancelar" onClick={onClose} disabled={saving} />
       </div>
       {error && <MessageBar messageBarType={MessageBarType.error}>{error}</MessageBar>}
+      {errorDetails && <details className={styles.errorDetails}>
+        <summary>Ver detalles técnicos</summary>
+        <pre>{errorDetails}</pre>
+      </details>}
       <div className={styles.formGrid}>
-        <TextField label="Código" required value={code} onChange={(_, value) => setCode(value || '')} disabled={saving} />
-        <TextField label={mode === 'group' ? 'Nombre del grupo' : 'Nombre del proceso'} required value={name} onChange={(_, value) => setName(value || '')} disabled={saving} />
+        <TextField label="Código" required value={code} errorMessage={codeError} onChange={(_, value) => { setCode(value || ''); setCodeError(''); setError(undefined); setErrorDetails(undefined); }} disabled={saving} />
+        <TextField label={mode === 'group' ? 'Nombre del grupo' : 'Nombre del proceso'} required value={name} errorMessage={nameError} onChange={(_, value) => { setName(value || ''); setNameError(''); setError(undefined); setErrorDetails(undefined); }} disabled={saving} />
         <Dropdown label="Departamento" required options={departmentOptions} selectedKey={departmentId} onChange={(_, option) => {
-          setDepartmentId(option?.key as number);
+          setDepartmentId(typeof option?.key === 'number' ? option.key : undefined);
           setGroupId(undefined);
-        }} disabled={saving} />
+          setDepartmentError('');
+          setError(undefined);
+          setErrorDetails(undefined);
+        }} disabled={saving} errorMessage={departmentError} />
         {mode === 'process' && <>
-          <Dropdown label="Grupo de procesos (opcional)" options={groupOptions} selectedKey={groupId} onChange={(_, option) => {
+          <Dropdown label="Grupo de procesos (opcional)" options={[{ key: '', text: 'Sin grupo' }, ...groupOptions]} selectedKey={groupId ?? ''} onChange={(_, option) => {
             const selectedGroup = departmentGroups.find(group => group.id === option?.key);
             setGroupId(selectedGroup?.id);
             setDepartmentId(selectedGroup?.departmentId || departmentId);
