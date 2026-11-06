@@ -96,12 +96,14 @@ export class ProcessService {
     const departmentChoice = departmentField.Choices?.find(choice =>
       choice.toLowerCase().includes(departmentValue.toLowerCase()));
     const departmentStoredValue = departmentChoice || departmentValue;
-    const publisherField = await this.sharePoint.tryResolveField(CREATE_LIST_TITLE, ['Involucrados', 'Publicado por', 'Publicador']);
-    const currentUser = publisherField ? await this.sharePoint.sp.web.currentUser() : undefined;
     const values: Record<string, unknown> = {
-      [titleField.InternalName]: name,
-      [departmentField.InternalName]: departmentField.AllowMultipleValues ? [departmentStoredValue] : departmentStoredValue
+      [titleField.InternalName]: name
     };
+    if (departmentField.TypeAsString.toLowerCase().includes('choice')) {
+      values[departmentField.InternalName] = departmentField.AllowMultipleValues ? [departmentStoredValue] : departmentStoredValue;
+    } else if (departmentId > 0) {
+      values[`${departmentField.InternalName}Id`] = departmentId;
+    }
     if (codeField) {
       values[codeField.InternalName] = code;
     }
@@ -114,11 +116,6 @@ export class ProcessService {
     if (ownerField && ownerEmail) {
       const owner = await this.sharePoint.sp.web.ensureUser(ownerEmail);
       values[`${ownerField.InternalName}Id`] = owner.Id;
-    }
-    if (publisherField && currentUser) {
-      values[`${publisherField.InternalName}Id`] = publisherField.AllowMultipleValues
-        ? { results: [currentUser.Id] }
-        : currentUser.Id;
     }
     await this.sharePoint.sp.web.lists.getByTitle(CREATE_LIST_TITLE).items.add(values);
   }
