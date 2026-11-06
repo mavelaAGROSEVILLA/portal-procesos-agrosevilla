@@ -42,7 +42,6 @@ const CreateItemPanel: React.FunctionComponent<ICreateItemPanelProps> = ({
   const [code, setCode] = React.useState('');
   const [name, setName] = React.useState('');
   const [description, setDescription] = React.useState('');
-  const [ownerEmail, setOwnerEmail] = React.useState('');
   const [departmentId, setDepartmentId] = React.useState<number | undefined>(selectedDepartmentId);
   const [groupId, setGroupId] = React.useState<number | undefined>(selectedGroupId);
   const [saving, setSaving] = React.useState(false);
@@ -53,10 +52,10 @@ const CreateItemPanel: React.FunctionComponent<ICreateItemPanelProps> = ({
   const groupOptions: IDropdownOption[] = departmentGroups.map(group => ({ key: group.id, text: `${group.code} - ${group.name}` }));
 
   const submit = async (): Promise<void> => {
-    if (!code.trim() || !name.trim() || !departmentId || (mode === 'process' && (!groupId || !ownerEmail.trim()))) {
+    if (!code.trim() || !name.trim() || !departmentId) {
       setError(mode === 'group'
         ? 'Completa el código, el nombre y el departamento.'
-        : 'Completa el código, el nombre, el responsable y el grupo.');
+        : 'Completa el código, el nombre y el departamento.');
       return;
     }
     try {
@@ -65,12 +64,22 @@ const CreateItemPanel: React.FunctionComponent<ICreateItemPanelProps> = ({
       if (mode === 'group') {
         await new ProcessGroupService(sp).createGroup(code.trim(), name.trim(), departmentId);
       } else {
-        await new ProcessService(sp).createProcess(code.trim(), name.trim(), description.trim(), ownerEmail.trim(), groupId as number, departmentId);
+        const selectedDepartment = departments.find(department => department.id === departmentId);
+        await new ProcessService(sp).createProcess(
+          code.trim(),
+          name.trim(),
+          description.trim(),
+          '',
+          groupId as number,
+          departmentId,
+          selectedDepartment ? selectedDepartment.code : ''
+        );
       }
       await onCreated();
     } catch (saveError) {
       console.error('[ProcessView] Error al crear elemento', saveError);
-      setError('No se ha podido guardar. Revisa los datos y tus permisos en SharePoint.');
+      const errorMessage = saveError instanceof Error ? saveError.message : 'Error desconocido';
+      setError(`No se ha podido guardar: ${errorMessage}`);
     } finally {
       setSaving(false);
     }
@@ -94,12 +103,11 @@ const CreateItemPanel: React.FunctionComponent<ICreateItemPanelProps> = ({
           setGroupId(undefined);
         }} disabled={saving} />
         {mode === 'process' && <>
-          <Dropdown label="Grupo de procesos" required options={groupOptions} selectedKey={groupId} onChange={(_, option) => {
+          <Dropdown label="Grupo de procesos (opcional)" options={groupOptions} selectedKey={groupId} onChange={(_, option) => {
             const selectedGroup = departmentGroups.find(group => group.id === option?.key);
             setGroupId(selectedGroup?.id);
             setDepartmentId(selectedGroup?.departmentId || departmentId);
           }} disabled={saving || departmentId === undefined || departmentGroups.length === 0} placeholder={departmentId === undefined ? 'Selecciona primero un departamento' : 'Selecciona un grupo'} />
-          <TextField label="Responsable (correo corporativo)" required value={ownerEmail} onChange={(_, value) => setOwnerEmail(value || '')} disabled={saving} />
           <TextField className={styles.formWide} label="Descripción" multiline rows={4} value={description} onChange={(_, value) => setDescription(value || '')} disabled={saving} />
         </>}
       </div>

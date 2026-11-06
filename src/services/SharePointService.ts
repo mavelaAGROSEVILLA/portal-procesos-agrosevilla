@@ -9,6 +9,7 @@ interface ISharePointField {
   Title: string;
   TypeAsString: string;
   AllowMultipleValues: boolean;
+  Choices?: string[];
 }
 
 export interface ISharePointItem {
@@ -50,9 +51,32 @@ export class SharePointService {
     return field;
   }
 
+  public async tryResolveField(listTitle: string, candidates: string[]): Promise<ISharePointField | undefined> {
+    const fields = this.fieldCache.get(listTitle) || await this.loadFields(listTitle);
+    return candidates.reduce<ISharePointField | undefined>((match, candidate) => {
+      if (match) {
+        return match;
+      }
+      const candidateName = candidate.toLowerCase();
+      return fields.get(candidateName) || Array.from(fields.values())
+        .find(item => typeof item.Title === 'string' && item.Title.toLowerCase() === candidateName);
+    }, undefined);
+  }
+
+  public async resolveFieldByTitleFragment(listTitle: string, fragment: string): Promise<ISharePointField> {
+    const fields = this.fieldCache.get(listTitle) || await this.loadFields(listTitle);
+    const normalizedFragment = fragment.toLowerCase();
+    const field = Array.from(fields.values()).find(item =>
+      typeof item.Title === 'string' && item.Title.toLowerCase().includes(normalizedFragment));
+    if (!field) {
+      throw new Error(`No se encontró una columna cuyo título contenga "${fragment}" en la lista "${listTitle}".`);
+    }
+    return field;
+  }
+
   private async loadFields(listTitle: string): Promise<Map<string, ISharePointField>> {
     const fieldItems = await this.sp.web.lists.getByTitle(listTitle).fields
-      .select('InternalName', 'Title', 'TypeAsString', 'AllowMultipleValues')();
+      .select('InternalName', 'Title', 'TypeAsString', 'AllowMultipleValues', 'Choices')();
     const typedFields = fieldItems as unknown as ISharePointField[];
     const fields = new Map(typedFields
       .filter(field => typeof field.InternalName === 'string' && field.InternalName.length > 0)

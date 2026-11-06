@@ -8,6 +8,7 @@ import type { IDepartment, IDocumentoContenido, IDocumentoProceso, IProcess, IPr
 import Department from '../Department/Department';
 import ProcessGroup from '../ProcessGroup/ProcessGroup';
 import Process from '../Process/Process';
+import AllProcesses from '../Process/AllProcesses';
 import ProcessDetail from '../Process/ProcessDetail';
 import CreateItemPanel, { type CreateItemMode } from './CreateItemPanel';
 import GlobalSearch from './GlobalSearch';
@@ -29,6 +30,10 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
     const [groupCounts, setGroupCounts] = React.useState<Map<number, number>>(new Map());
     const [processCounts, setProcessCounts] = React.useState<Map<number, number>>(new Map());
   const [processes, setProcesses] = React.useState<IProcess[]>([]);
+  const [allProcesses, setAllProcesses] = React.useState<IProcess[]>([]);
+  const [allGroups, setAllGroups] = React.useState<IProcessGroup[]>([]);
+  const [selectedAllProcessId, setSelectedAllProcessId] = React.useState<number>();
+  const [showAllProcesses, setShowAllProcesses] = React.useState(false);
   const [documents, setDocuments] = React.useState<IDocumentoProceso[]>([]);
   const [documentsLoading, setDocumentsLoading] = React.useState(false);
   const [documentsError, setDocumentsError] = React.useState<string>();
@@ -39,6 +44,8 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
   const [departmentError, setDepartmentError] = React.useState<string>();
   const [groupError, setGroupError] = React.useState<string>();
   const [processError, setProcessError] = React.useState<string>();
+  const [allProcessesLoading, setAllProcessesLoading] = React.useState(false);
+  const [allProcessesError, setAllProcessesError] = React.useState<string>();
   const groupsCache = React.useRef<Map<number, IProcessGroup[]>>(new Map());
   const processesCache = React.useRef<Map<number, IProcess[]>>(new Map());
 
@@ -49,6 +56,7 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
         const loadedDepartments = await new DepartmentService(sp).getDepartments();
         setDepartments(loadedDepartments);
         new ProcessGroupService(sp).getAllGroups().then(allGroups => {
+          setAllGroups(allGroups);
           const counts = new Map<number, number>();
           allGroups.forEach(group => counts.set(group.departmentId, (counts.get(group.departmentId) || 0) + 1));
           setGroupCounts(counts);
@@ -153,12 +161,48 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
     }
   };
 
+  const showAllProcessesView = async (): Promise<void> => {
+    setShowAllProcesses(true);
+    setSelectedProcess(undefined);
+    setSelectedAllProcessId(undefined);
+    setAllProcessesError(undefined);
+    if (allProcesses.length > 0) {
+      return;
+    }
+    try {
+      setAllProcessesLoading(true);
+      const [loadedProcesses, loadedGroups] = await Promise.all([
+        new ProcessService(sp).getAllProcesses(),
+        allGroups.length > 0 ? Promise.resolve(allGroups) : new ProcessGroupService(sp).getAllGroups()
+      ]);
+      setAllProcesses(loadedProcesses);
+      setAllGroups(loadedGroups);
+    } catch (error) {
+      console.error('[ProcessView] Error al cargar todos los procesos', error);
+      setAllProcessesError('No se han podido cargar todos los procesos.');
+    } finally {
+      setAllProcessesLoading(false);
+    }
+  };
+
+  const toggleAllProcessesView = async (): Promise<void> => {
+    if (showAllProcesses) {
+      setShowAllProcesses(false);
+      setSelectedAllProcessId(undefined);
+      setSelectedProcess(undefined);
+      return;
+    }
+    await showAllProcessesView();
+  };
+
   const closeBranch = (): void => {
     setSelectedDepartmentId(undefined);
     setSelectedGroupId(undefined);
     setSelectedProcess(undefined);
     setGroups([]);
     setProcesses([]);
+    setShowAllProcesses(false);
+    setAllProcessesError(undefined);
     setCreateMode(undefined);
     setIsAddMenuOpen(false);
   };
@@ -229,6 +273,7 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
         <GlobalSearch sp={sp} onSelect={result => { focusSearchResult(result).catch(() => undefined); }} />
         <div className={styles.headerActions}>
           <button className={styles.addButton} type="button" onClick={() => setIsAddMenuOpen(!isAddMenuOpen)} aria-expanded={isAddMenuOpen}>Añadir</button>
+          <button className={`${styles.showAllButton} ${showAllProcesses ? styles.showAllButtonActive : ''}`} type="button" onClick={() => { toggleAllProcessesView().catch(() => undefined); }} aria-pressed={showAllProcesses}>{showAllProcesses ? 'Volver a la vista anterior' : 'Mostrar todos los procesos'}</button>
           {isAddMenuOpen && <div className={styles.addMenu} role="menu">
             <button type="button" role="menuitem" onClick={() => { setCreateMode('group'); setIsAddMenuOpen(false); }}>Grupo de procesos</button>
             <button type="button" role="menuitem" onClick={() => { openProcessForm().catch(() => undefined); }}>Proceso</button>
@@ -236,7 +281,18 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
           {selectedDepartmentId !== undefined && <button className={styles.closeButton} type="button" onClick={closeBranch}>Cerrar rama</button>}
         </div>
       </header>
-      <div className={styles.tree}>
+      {showAllProcesses ? <AllProcesses
+        processes={selectedAllProcessId === undefined ? allProcesses : allProcesses.filter(process => process.id === selectedAllProcessId)}
+        selectedProcessId={selectedAllProcessId}
+        departments={departments}
+        groups={allGroups}
+        loading={allProcessesLoading}
+        error={allProcessesError}
+        onSelect={process => {
+          setSelectedAllProcessId(process.id);
+          selectProcess(process).catch(() => undefined);
+        }}
+      /> : <div className={styles.tree}>
         <Department
           departments={compactTree ? departments.filter(department => department.id === selectedDepartmentId) : departments}
           selectedId={selectedDepartmentId}
@@ -260,7 +316,7 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
           error={processError}
           onSelect={process => { selectProcess(process).catch(() => undefined); }}
         />}
-      </div>
+      </div>}
       {createMode && <CreateItemPanel
         key={createMode}
         mode={createMode}
@@ -278,7 +334,10 @@ const Home: React.FunctionComponent<IHomeProps> = ({ sp }) => {
         documentsLoading={documentsLoading}
         documentsError={documentsError}
         folderContents={folderContents}
-        onClose={() => setSelectedProcess(undefined)}
+        onClose={() => {
+          setSelectedProcess(undefined);
+          setSelectedAllProcessId(undefined);
+        }}
       />}
     </section>
   );

@@ -14,6 +14,14 @@ export class ProcessService {
   }
 
   public async getProcessesByGroup(groupId: number): Promise<IProcess[]> {
+    return this.getProcesses(groupId);
+  }
+
+  public async getAllProcesses(): Promise<IProcess[]> {
+    return this.getProcesses();
+  }
+
+  private async getProcesses(groupId?: number): Promise<IProcess[]> {
     const codeField = await this.sharePoint.resolveField(LIST_TITLE, ['Codigo', 'Código', 'Title', 'Título']);
     const nameField = await this.sharePoint.resolveField(LIST_TITLE, ['NombreProceso']);
     const descriptionField = await this.sharePoint.resolveField(LIST_TITLE, ['DescripcionProceso', 'DescripciónProceso']);
@@ -22,7 +30,7 @@ export class ProcessService {
     const ownerField = await this.sharePoint.resolveField(LIST_TITLE, ['PropietarioProceso', 'Propietario del proceso']);
     const statusField = await this.sharePoint.resolveField(LIST_TITLE, ['Status', 'Estado']);
     const typeField = await this.sharePoint.resolveField(LIST_TITLE, ['TipoProceso', 'Tipo de proceso']);
-    const items = await this.sharePoint.sp.web.lists.getByTitle(LIST_TITLE).items
+    let itemsQuery = this.sharePoint.sp.web.lists.getByTitle(LIST_TITLE).items
       .select(
         'ID',
         codeField.InternalName,
@@ -34,8 +42,11 @@ export class ProcessService {
         statusField.InternalName,
         typeField.InternalName
       )
-      .expand(ownerField.InternalName)
-      .filter(`${groupField.InternalName}Id eq ${groupId}`)();
+      .expand(ownerField.InternalName);
+    if (groupId !== undefined) {
+      itemsQuery = itemsQuery.filter(`${groupField.InternalName}Id eq ${groupId}`);
+    }
+    const items = await itemsQuery();
 
     return (items as ISharePointItem[])
       .map(item => ({
@@ -73,23 +84,39 @@ export class ProcessService {
     description: string,
     ownerEmail: string,
     groupId: number,
-    departmentId: number
+    departmentId: number,
+    departmentValue: string
   ): Promise<void> {
-    const codeField = await this.sharePoint.resolveField(CREATE_LIST_TITLE, ['Codigo', 'Código', 'Title', 'Título']);
-    const nameField = await this.sharePoint.resolveField(CREATE_LIST_TITLE, ['NombreProceso']);
-    const descriptionField = await this.sharePoint.resolveField(CREATE_LIST_TITLE, ['DescripcionProceso', 'DescripciónProceso']);
-    const ownerField = await this.sharePoint.resolveField(CREATE_LIST_TITLE, ['PropietarioProceso', 'Propietario del proceso']);
-    const groupField = await this.sharePoint.resolveField(CREATE_LIST_TITLE, ['GrupoProcesoLookup', 'Grupo de procesos']);
-    const departmentField = await this.sharePoint.resolveField(CREATE_LIST_TITLE, ['DepartamentoLookup', 'Departamento']);
-    const owner = await this.sharePoint.sp.web.ensureUser(ownerEmail);
+    const codeField = await this.sharePoint.tryResolveField(CREATE_LIST_TITLE, ['Codigo', 'Código']);
+    const titleField = await this.sharePoint.resolveField(CREATE_LIST_TITLE, ['Title', 'Título', 'NombreProceso']);
+    const descriptionField = await this.sharePoint.tryResolveField(CREATE_LIST_TITLE, ['Contexto', 'Contexto - Descripción', 'DescripcionProceso', 'DescripciónProceso']);
+    const ownerField = await this.sharePoint.tryResolveField(CREATE_LIST_TITLE, ['PropietarioProceso', 'Propietario del proceso', 'Involucrados']);
+    const groupField = await this.sharePoint.tryResolveField(CREATE_LIST_TITLE, ['GrupoProcesoLookup', 'Grupo de procesos']);
+    const departmentField = await this.sharePoint.resolveFieldByTitleFragment(CREATE_LIST_TITLE, 'departamento');
+    const departmentChoice = departmentField.Choices?.find(choice =>
+      choice.toLowerCase().includes(departmentValue.toLowerCase()));
+    const departmentStoredValue = departmentChoice || departmentValue;
     const values: Record<string, unknown> = {
-      [codeField.InternalName]: code,
-      [nameField.InternalName]: name,
-      [descriptionField.InternalName]: description,
-      [ownerField.InternalName]: owner.Id,
-      [`${groupField.InternalName}Id`]: groupId,
-      [`${departmentField.InternalName}Id`]: departmentId
+      [titleField.InternalName]: name
     };
+    if (departmentField.TypeAsString.toLowerCase().includes('choice')) {
+      values[departmentField.InternalName] = departmentField.AllowMultipleValues ? [departmentStoredValue] : departmentStoredValue;
+    } else if (departmentId > 0) {
+      values[`${departmentField.InternalName}Id`] = departmentId;
+    }
+    if (codeField) {
+      values[codeField.InternalName] = code;
+    }
+    if (descriptionField && description) {
+      values[descriptionField.InternalName] = description;
+    }
+    if (groupField && groupId) {
+      values[`${groupField.InternalName}Id`] = groupId;
+    }
+    if (ownerField && ownerEmail) {
+      const owner = await this.sharePoint.sp.web.ensureUser(ownerEmail);
+      values[`${ownerField.InternalName}Id`] = owner.Id;
+    }
     await this.sharePoint.sp.web.lists.getByTitle(CREATE_LIST_TITLE).items.add(values);
   }
 }
